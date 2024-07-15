@@ -1,0 +1,446 @@
+﻿<style>
+    .video-grid {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .video-grid video {
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+    .chat-box {
+        max-height: 160px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .message {
+        padding: 8px 12px;
+        margin-bottom: 5px;
+        border-radius: 15px;
+    }
+
+        .message.you {
+            background-color: #d1e7dd;
+            align-self: end;
+        }
+
+        .message.other {
+            background-color: #f8d7da;
+            align-self: start;
+        }
+
+    .message-input-container .emojis-container {
+        max-width: 170px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        position: absolute;
+        right: 54px;
+        bottom: 45px;
+        padding: 5px 7px;
+        cursor: default;
+    }
+    .emojis-container {
+        position: absolute;
+        bottom: 49px;
+        right: 50px;
+        background-color: beige;
+        padding: 16px;
+    }
+        .emojis-container button {
+            display: inline-flex;
+            padding: 5px;
+            border-radius: 4px;
+            border: none;
+            background: white;
+        }
+
+            .emojis-container button:hover {
+                background: #ddd;
+            }
+
+            .emojis-container button img {
+                width: 16px;
+                height: 16px;
+            }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-8 col-md-12">
+            <div class="card">
+                <div class="card-header text-white text-center" style="background-color:#EFA969;">
+                    Random Chat
+                </div>
+                <div class="card-body">
+                    <div id="video-grid" class="video-grid mb-3 flex-column flex-md-row">
+
+                    </div>
+                    <div class="d-flex justify-content-around">
+                        <button disabled class="btn btn-danger mb-3" id="findBtn">Find</button>
+                        <button class="btn btn-secondary mb-3 d-none" id="stopBtn">Stop</button>
+                    </div>
+                    
+                    <div class="chat-container d-none" id="chat-container">
+                        <div id="chat-box" class="d-flex flex-column chat-box border p-2 mb-2">
+                            <!-- Messages will appear here -->
+                        </div>
+                        <div class="input-group position-relative">
+                            <input type="text" class="form-control mx-2" id="chat-input" placeholder="Type a message...">
+                            <div class="input-group-append">
+                                @* <button class="btn btn-primary" id="sendBtn">Send</button> *@
+                                <a class="mx-1 align-self-center" role="button" id="btn-show-emojis">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smile"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                                </a>
+                                <a class="align-self-center" role="button" id="sendBtn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </a>
+                            </div>
+
+                            <div class="emojis-container text-right rounded d-none" id="emojis-container">
+                                <button data-value=":)">
+                                    <img src="~/images/emojis/emoji1.png" />
+                                </button>
+                                <button data-value=":P">
+                                    <img src="~/images/emojis/emoji2.png" />
+                                </button>
+                                <button data-value=":O">
+                                    <img src="~/images/emojis/emoji3.png" />
+                                </button>
+                                <button data-value=":-)">
+                                    <img src="~/images/emojis/emoji4.png" />
+                                </button>
+                                <button data-value="B|">
+                                    <img src="~/images/emojis/emoji5.png" />
+                                </button>
+                                <button data-value=":D">
+                                    <img src="~/images/emojis/emoji6.png" />
+                                </button>
+                                <button data-value="<3">
+                                    <img src="~/images/emojis/emoji7.png" />
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <input class="d-none" id="otherUserId" type="text" name="otherUserId">
+                        <button id="btnAddFriend" class="btn btn-success d-none">Add Friend</button>
+                        <button id="btnAcceptFriend" class="btn btn-success d-none">Accept Friend</button>
+                        <div id="alertMessage" class="mx-auto w-50 alert alert-success alert-dismissible fade show d-none" role="alert">
+                            <span>you have become friends</span>
+                            <button id="closeButton" type="button" class="close" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+@section Scripts {
+    <script>
+        //const ROOM_ID = '@ViewBag.roomId';
+        let userPeerId = null;
+        let localStream = null;
+        let userId = '@ViewBag.UserId';
+        let userName = '@ViewBag.UserName';
+        let otherUserPeerId = null;
+        let myPeer = null;
+        const findBtn = document.getElementById('findBtn');
+        const chatContainer = document.getElementById('chat-container');
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('sendBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        const initPeer = () => {
+            myPeer = new Peer()
+            myPeer.on('open', id => {
+                userPeerId = id;
+                findBtn.disabled = false;
+            })
+            myPeer.on('call', call => {
+                call.answer(localStream);
+                call.on('close', () => {
+                    console.log('Cuộc gọi đã kết thúc');
+                    if (VideoGrid.childElementCount >= 2) {
+                        VideoGrid.removeChild(VideoGrid.lastChild);
+                    }
+                    chatBox.innerHTML = '';
+                    chatContainer.classList.add('d-none');
+                    stopBtn.classList.add('d-none');
+                    findBtn.disabled = false;
+                });
+                const userVideo = document.createElement('video');
+                call.on('stream', userVideoStream => {
+                    addVideoStream(userVideo, userVideoStream);
+                })
+            })
+            myPeer.on('close', () => {
+                console.log('Kết nối peer đã đóng');
+                connection.invoke('DisMatch', otherUserPeerId);
+            });
+        }
+        initPeer();
+        console.log(userId)
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/RandomChatHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+        connection.start().then(() => {
+            console.log("Đã kết nối SignalR.");
+        }).catch(err => {
+            console.error("Lỗi kết nối SignalR: " + err);
+        });
+
+        
+
+        const VideoGrid = document.getElementById('video-grid');
+        const myVideo = document.createElement('video');
+        myVideo.muted = true;
+        navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true
+        }).then(stream => {
+            addVideoStream(myVideo, stream);
+            localStream = stream;
+        })
+
+        
+
+        findBtn.addEventListener('click', () => {
+            console.log('click ' + userId);
+            connection.invoke("Waiting", userPeerId, userId)
+            findBtn.disabled = true;
+        })
+
+        
+        
+        connection.on("connecting", (id, UserId) => {
+            if (!chatContainer.classList.contains('d-none')) {
+                return;
+            }
+            otherUserPeerId = id;
+            if (userPeerId === id) return;
+            console.log(`User connected: ${id}`)
+            //findBtn.disabled = false;
+            connectNewUser(id, localStream);
+            $('#otherUserId').val(UserId);
+            chatContainer.classList.remove('d-none');
+            $('#btnAddFriend').removeClass('d-none');
+            findBtn.disabled = true;
+            stopBtn.classList.remove('d-none');
+        })
+        connection.on("subconnectting", UserId => {
+            if (!chatContainer.classList.contains('d-none')) {
+                return;
+            }
+            $('#otherUserId').val(UserId);
+            chatContainer.classList.remove('d-none');
+            $('#btnAddFriend').removeClass('d-none');
+            findBtn.disabled = true;
+            stopBtn.classList.remove('d-none');
+        })
+        stopBtn.addEventListener('click', () => {
+            endCall();
+            initPeer();
+        });
+        const endCall = () => {
+            myPeer.disconnect();
+            if (VideoGrid.childElementCount >= 2) {
+                VideoGrid.removeChild(VideoGrid.lastChild);
+            }
+            chatBox.innerHTML = '';
+            chatContainer.classList.add('d-none');
+            stopBtn.classList.add('d-none');
+            $('#btnAddFriend').addClass('d-none');
+            $('#btnAcceptFriend').addClass('d-none');
+            findBtn.disabled = false;
+            connection.invoke('DisMatch', $('#otherUserId').val());
+        };
+        connection.on("user-disconnected", id => {
+            console.log(id)
+            if ($('#otherUserId').val() == id) {
+                endCall();
+                initPeer();
+            }
+        })
+
+        
+        connection.on("dismatch", () => {
+            myPeer.disconnect()
+            if (VideoGrid.childElementCount >= 2) {
+                VideoGrid.removeChild(VideoGrid.lastChild);
+            }
+            chatBox.innerHTML = '';
+            $('#btnAddFriend').addClass('d-none');
+            $('#btnAcceptFriend').addClass('d-none');
+            chatContainer.classList.add('d-none');
+            stopBtn.classList.add('d-none');
+            findBtn.disabled = false;
+            connection.invoke('SubDisMatch');
+            initPeer();
+        })
+
+        const addVideoStream = (video, stream) => {
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+            })
+            VideoGrid.appendChild(video);
+        }
+
+        const connectNewUser = (userPeerId, localStream) => {
+            const userVideo = document.createElement('video');
+            const call = myPeer.call(userPeerId, localStream);
+            call.on('close', () => {
+                console.log('Cuộc gọi đã kết thúc');
+                if (VideoGrid.childElementCount >= 2) {
+                    VideoGrid.removeChild(VideoGrid.lastChild);
+                }
+                chatBox.innerHTML = '';
+                chatContainer.classList.add('d-none');
+                stopBtn.classList.add('d-none');
+                findBtn.disabled = false;
+            });
+            call.on('stream', userVideoStream => {
+                addVideoStream(userVideo, userVideoStream)
+            })
+        }
+
+        
+
+        //send friend request
+        $('#btnAddFriend').on('click', () => {
+            $('#btnAddFriend').addClass('d-none');
+            connection.invoke("SendFriendRequest", userId + "," + $('#otherUserId').val())
+            connection.invoke("SendFriendRequest", $('#otherUserId').val() + "," + userId)
+        })
+
+        connection.on("SendFriendRequest", () => {
+            $('#btnAcceptFriend').removeClass('d-none');
+            $('#btnAddFriend').addClass('d-none');
+        })
+        connection.on("FriendRequestResult", (result) => {
+            if (result === 1) {
+                $('#alertMessage').removeClass('d-none')
+                $('#alertMessage span')[0].textContent = 'You have become friends';
+                console.log('add friend successful')
+            } else {
+                $('#alertMessage').removeClass('d-none')
+                $('#alertMessage span')[0].textContent = 'You guys become friends before';
+            }
+        })
+
+        $('#btnAcceptFriend').on('click', async () => {
+            console.log($('#otherUserId').val())
+            const result = await addFriend($('#otherUserId').val());
+            $('#btnAcceptFriend').addClass('d-none');
+            if (result === 1) {
+                $('#alertMessage').removeClass('d-none')
+                $('#alertMessage span')[0].textContent = 'You have become friends';
+                connection.invoke("FriendRequestResult", userId + "," + $('#otherUserId').val(), result)
+                connection.invoke("FriendRequestResult", $('#otherUserId').val() + "," + userId, result)
+                console.log('add friend successful')
+            } else {
+                $('#alertMessage').removeClass('d-none')
+                $('#alertMessage span')[0].textContent = 'You guys become friends before';
+                connection.invoke("FriendRequestResult", userId + "," + $('#otherUserId').val(), result)
+                connection.invoke("FriendRequestResult", $('#otherUserId').val() + "," + userId, result)
+            }
+        })
+        $('#closeButton').on('click', function () {
+            $('#alertMessage').addClass('d-none');
+        });
+
+        //api addfriend
+        async function addFriend(otherUserId) {
+            try {
+                console.log(otherUserId)
+                const response = await fetch('/Chat/AddFriend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ otherUserId: otherUserId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+                return 0;
+            }
+        }
+
+        // chat functionality
+        sendBtn.addEventListener('click', () => {
+            const message = chatInput.value;
+            if (message.trim() !== '') {
+                connection.invoke('SendMessage',userId , userName, $('#otherUserId').val(), message)
+                    .catch(err => console.error(err.toString()));
+                $("#emojis-container").addClass('d-none')
+                chatInput.value = '';
+            }
+        })
+        $("#chat-input").focus(function () {
+            $(this).keypress(function (event) {
+                if (event.which == 13) {
+                    const message = $(this).val();
+                    if (message.trim() !== '') {
+                        connection.invoke('SendMessage', userId, userName, $('#otherUserId').val(), message)
+                            .catch(err => console.error(err.toString()));
+                        $("#emojis-container").addClass('d-none')
+                        $(this).val('');
+                    }
+                }
+            });
+        });
+        connection.on('ReceiveMessage', (senderId ,senderName, message) => {
+            if (senderId == userId) 
+                appendMessage(`You: ${message}`, 'you');
+            else
+                appendMessage(`${senderName}: ${message}`, 'other');
+        })
+
+        const appendMessage = (message, type) => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (type === 'you') {
+                messageElement.classList.add('text-right');
+            }
+            messageElement.innerHTML = message;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        //icon send mss
+        $("#btn-show-emojis").click(function () {
+            $("#emojis-container").toggleClass("d-none");
+        });
+        $('#emojis-container').on('click', 'button', function () {
+            var emojiValue = $(this).data("value");
+            var input = $('#chat-input');
+            input.val(input.val() + emojiValue + " ");
+            input.focus();
+            input.change();
+        });
+    </script>
+}

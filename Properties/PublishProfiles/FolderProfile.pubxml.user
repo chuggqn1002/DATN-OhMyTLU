@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>D:\DATN\Deploy</_PublishTargetUrl>
+    <History>True|2024-06-24T14:32:05.5697451Z;True|2024-06-24T21:23:04.0788949+07:00;True|2024-06-24T21:21:29.1353240+07:00;True|2024-06-24T21:20:31.0984275+07:00;False|2024-06-24T21:06:51.1901669+07:00;True|2024-06-24T21:00:40.3961996+07:00;True|2024-06-09T21:35:44.7766440+07:00;False|2024-06-09T21:35:36.3156582+07:00;True|2024-06-09T21:34:42.9277312+07:00;False|2024-06-09T21:34:34.5031436+07:00;True|2024-06-09T21:25:42.4434481+07:00;True|2024-06-09T21:16:44.1720875+07:00;False|2024-06-09T21:16:27.5962997+07:00;True|2024-06-09T20:55:49.6501336+07:00;True|2024-06-09T20:52:42.5823926+07:00;</History>
+    <LastFailureDetails />
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="dbcs">
+      <Value>Data Source=CHUNG\SQLEXPRESS%3bInitial Catalog=OhMyTLU%3bIntegrated Security=True%3bTrustServerCertificate=True%3b</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+</Project>

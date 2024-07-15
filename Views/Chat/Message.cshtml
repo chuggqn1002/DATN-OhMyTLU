@@ -1,0 +1,257 @@
+﻿<link rel="stylesheet" href="~/css/message.css" asp-append-version="true" />
+<div class="alert alert-warning alert-dismissible d-none" id="errorAlert" role="alert">
+    <span data-bind="text:serverInfoMessage"></span>
+    <button type="button" class="btn-close" aria-label="Close"></button>
+</div>
+
+<div class="d-flex flex-column justify-content-center align-items-center vh-100" data-bind="css: isLoading() ? 'd-flex' : 'd-none'">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">  </span>
+    </div>
+</div>
+
+<div class="app" >
+        <div class="users-container">
+        <div class="header">
+            <h5>Friends (<span data-bind="text: filteredFriend().length"></span>)</h5>
+        </div>
+        <ul class="list-unstyled flex-grow-1" id="users-list" data-bind="foreach: filteredFriend">
+            <li class="mx-2 rounded" data-bind="attr: { 'data-userId': id }, click: $parent.selectFriend.bind($data), css: { active: $root.selectedFriend() && $root.selectedFriend().id() === id()}">
+                <div class="user">
+                    <img class="avatar me-2" onerror="this.onerror=null; this.src='/Icon/user.png';" data-bind=" attr: { src: id() != null ? '/User/GetProfileImage?userId=' + id() : '' }" />
+                    <div class="user-info">
+                        <span class="name" data-bind="text: name, css: {hasUnreadMessage: hasUnreadMessage()}"></span>
+                    </div>
+                    <span class="text-success" data-bind="visible: ko.unwrap(isOnline) == true">●</span>
+                </div>
+            </li>
+        </ul>
+        <div class="position-relative search-container text-secondary">
+            <input type="text" class="" placeholder="Fillter" data-bind="value: filter, valueUpdate: 'afterkeydown'" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+    </div>
+    
+    <div class="main-content" >
+        <div class="header">
+            <div class="user">
+                <img class="avatar me-2" onerror="this.onerror=null; this.src='/Icon/user.png';" data-bind="visible: selectedFriend() != null, attr: { src: ko.unwrap(selectedFriend()) != null ? '/User/GetProfileImage?userId=' + ko.unwrap(selectedFriend()?.id) : '' }" />
+                <div class="user-info">
+                    <span class="name" data-bind="text: selectedFriend() != null ? selectedFriend().name : 'Select a friend to message!'"></span>
+                </div>
+            </div>
+            <div class="room-actions" >
+                <button type="button" class="btn btn-link text-secondary px-1" data-bind="click: function() { showUserInfo(selectedFriend()); }">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="5" cy="12" r="2" fill="currentColor" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        <circle cx="19" cy="12" r="2" fill="currentColor" />
+                    </svg>
+                </button>
+                <button type="button" class="btn btn-link text-secondary px-1" data-bind="attr: { 'data-friendId': selectedFriend()? selectedFriend().id() : '' }" data-toggle="modal" data-target="#delete-friend-modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+        <div class="messages-container">
+            <div class="no-messages-info" data-bind="if: chatMessages().length == 0">There are no messages.</div>
+            <ul class="list-unstyled" id="messages-list" data-bind="foreach: chatMessages">
+                <li>
+                    <div class="message-item" data-bind="css: { ismine: isMine() === true }">
+                        @* <span class="avatar avatar-lg mx-2 text-uppercase" data-bind="visible: avatar() == null, text: fromFullName()[0]"></span> *@
+                        <img class="avatar avatar-lg mx-2" onerror="this.onerror=null; this.src='/Icon/user.png';" data-bind="attr: { src:'/User/GetProfileImage?userId=' + senderId()  }" />
+                        <div class="message-content">
+                            <div class="message-info d-flex flex-wrap align-items-center">
+                                <span class="author" data-bind="text: fromUser()"></span>
+                                <span class="timestamp" data-bind="text: timestampRelative(), attr: { 'data-title': timestampFull }" data-toggle="tooltip" data-placement="top"></span>
+                            </div>
+                            <div class="content" data-bind="html: content"></div>
+                        </div>
+                        <div class="actions d-none">
+                            <div class="dropdown dropstart">
+                                <a class="text-secondary" role="button" data-toggle="dropdown" aria-expanded="false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bind="attr: { 'data-messageId': id }" data-toggle="modal" data-target="#remove-message-modal">Delete</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="message-input-container">
+            <input id="message-input" type="text" value="" maxlength="500" data-bind="value:message, valueUpdate: 'afterkeydown', event: { keypress: onEnter }, disable: selectedFriend() === undefined" placeholder="Type here..." />
+            <div class="actions d-flex align-items-center">
+                <form method="post" asp-action="Upload" asp-controller="Message" enctype="multipart/form-data" id="uploadForm">
+                    <label for="UploadedFile" class="custom-file-upload m-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    </label>
+                    <input type="hidden" name="senderId" value="@ViewBag.UserId" />
+                    <input type="hidden" name="receiverId" data-bind=" attr: { value: selectedFriend() != undefined ? selectedFriend().id() : '' }" />
+                    <input type="file" id="UploadedFile" name="File" accept=".jpg,.jpeg,.png" data-bind="event: {change: uploadFiles}, disable: selectedFriend() === undefined">
+                </form>
+                <a role="button" id="btn-show-emojis" >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smile"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                </a>
+                <a role="button" id="btn-send-message" data-bind="click: sendNewMessage,disable: selectedFriend() === undefined">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </a>
+            </div>
+            <div class="emojis-container d-none" id="emojis-container">
+                <button data-bind="disable: selectedFriend() === undefined" data-value=":)">
+                    <img src="~/images/emojis/emoji1.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value=":P">
+                    <img src="~/images/emojis/emoji2.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value=":O">
+                    <img src="~/images/emojis/emoji3.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value=":-)">
+                    <img src="~/images/emojis/emoji4.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value="B|">
+                    <img src="~/images/emojis/emoji5.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value=":D">
+                    <img src="~/images/emojis/emoji6.png" />
+                </button>
+                <button data-bind="disable: selectedFriend() === undefined" data-value="<3">
+                    <img src="~/images/emojis/emoji7.png" />
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="user-info-panel" data-bind="with: userInfo(), visible: userInfo()">
+        <div class="user-info">
+            <img class="avatar mb-2 mx-auto" onerror="this.onerror=null; this.src='/Icon/user.png';" data-bind="attr: { src: '/User/GetProfileImage?userId=' + id() }" />
+            <div class="user-details">
+                <p><strong>Name:</strong> <span data-bind="text: name"></span></p>
+                <p><strong>Email:</strong> <span data-bind="text: email"></span></p>
+                <p><strong>Description:</strong> <span data-bind="text: description"></span></p>
+                <!-- Add more details as needed -->
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="remove-message-modal" tabindex="-1" aria-labelledby="removeMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeMessageModalLabel">Delete Message</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">X</button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to delete this Message?</p>
+                <input type="hidden" class="form-control" id="itemToDelete" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" data-bind="click: deleteMessage">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="delete-friend-modal" tabindex="-1" aria-labelledby="deleteFriendModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFriendModalLabel">Delete Friend</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">x</button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to delete friend?</p>
+                <input type="hidden" class="form-control" id="friendToDelete" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal" data-bind="click: deleteFriend">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/knockout/knockout-3.5.1.js"></script>
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+    <script>
+        let userId = '@ViewBag.UserId';
+        let userName = '@ViewBag.UserName';
+
+        $(function () {
+
+            $('#emojis-container').on('click', 'button', function () {
+                var emojiValue = $(this).data("value");
+                var input = $('#message-input');
+                input.val(input.val() + emojiValue + " ");
+                input.focus();
+                input.change();
+            });
+
+            $("#btn-show-emojis").click(function () {
+                $("#emojis-container").toggleClass("d-none");
+            });
+
+            $("#message-input, .messages-container, #btn-send-message, #emojis-container button").click(function () {
+                $("#emojis-container").addClass("d-none");
+            });
+
+            $("#expand-sidebar").click(function () {
+                $(".sidebar").toggleClass("open");
+                $(".users-container").removeClass("open");
+            });
+
+            $("#expand-users-list").click(function () {
+                $(".users-container").toggleClass("open");
+                $(".sidebar").removeClass("open");
+            });
+
+            $(document).on("click", ".sidebar.open ul li a, #users-list li", function () {
+                $(".sidebar, .users-container").removeClass("open");
+            });
+
+            $(".modal").on("shown.bs.modal", function () {
+                $(this).find("input[type=text]:first-child").focus();
+            });
+
+            $(".alert .btn-close").on('click', function () {
+                $(this).parent().hide();
+            });
+
+            $('body').tooltip({
+                selector: '[data-bs-toggle="tooltip"]',
+                delay: { show: 500 }
+            });
+
+            $("#remove-message-modal").on("shown.bs.modal", function (e) {
+                const id = e.relatedTarget.getAttribute('data-messageId');
+                $("#itemToDelete").val(id);
+            });
+            $("#delete-friend-modal").on("shown.bs.modal", function (e) {
+                const id = e.relatedTarget.getAttribute('data-friendId');
+                $("#friendToDelete").val(id);
+            });
+
+            $(document).on("mouseenter", ".ismine", function () {
+                $(this).find(".actions").removeClass("d-none");
+            });
+
+            $(document).on("mouseleave", ".ismine", function () {
+                var isDropdownOpen = $(this).find(".dropdown-menu.show").length > 0;
+                if (!isDropdownOpen)
+                    $(this).find(".actions").addClass("d-none");
+            });
+
+            $(document).on("hidden.bs.dropdown", ".actions .dropdown", function () {
+                $(this).closest(".actions").addClass("d-none");
+            });
+        });
+    </script>
+}

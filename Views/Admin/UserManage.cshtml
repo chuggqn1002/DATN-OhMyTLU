@@ -1,0 +1,242 @@
+﻿@using X.PagedList.Mvc.Core
+@model X.PagedList.IPagedList<OhMyTLU.Data.User>
+
+@{
+    ViewData["Title"] = "User Management";
+    var successMessage = TempData["SuccessMessage"] as string;
+}
+
+<style>
+    .table-wrapper {
+        max-height: 400px;
+        overflow-y: auto;
+        background-color:white;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .table-header-fixed thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: white;
+    }
+
+    .table th {
+        background-color: orange;
+    }
+
+    .post-image{
+        width:50px;
+    }
+</style>
+
+@if (successMessage != null)
+{
+    <div id="successMessage" class="d-flex justify-content-between alert alert-warning alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+<div class="d-flex align-items-center flex-column">
+    <h2>User Manage</h2>
+
+    <p>
+        <a asp-action="CreateUser" class="btn btn-primary"><span><i class="fa fa-plus"></i></span></a>
+    </p>
+</div>
+
+
+<div class="table-wrapper border">
+    <table class="table table-header-fixed">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td class="align-middle">
+                        <img style="width:40px;" src="@Url.Action("GetProfileImage", "User", new { userId = user.Id })" />
+                    </td>
+                    <td class="align-middle">@user.Name</td>
+                    <td class="align-middle">@user.Email</td>
+                    <td class="align-middle">@user.Description</td>
+                    <td class="align-middle">
+                        <form id="Delete-Form" asp-action="Delete" method="post" style="display:none;">
+                            <input value="@user.Id" />
+                        </form>
+                        <a class="btn btn-success" asp-action="EditUser" asp-route-id="@user.Id"><span><i class="fa fa-pen"></i></span></a> |
+                        <a class="btn btn-danger" onclick="showConfirm('@user.Id')"><span><i class="fa fa-trash"></i></span></a> |
+                        <a class="btn btn-primary" onclick="showMessage('@user.Id')"><span><i class="fa fa-envelope"></i></span></a>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Delete confirm</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form asp-action="DeleteUser" id="deleteForm" method="post" style="display:inline;">
+                    <input type="hidden" name="id" id="deleteUserId" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Messages</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Send messages</h4>
+                <div id="sendMessageTable" class="table-wrapper border">
+                    <table class="table table-header-fixed">
+                        <thead>
+                            <tr>
+                                <th>Content</th>
+                                <th>Send to</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        <img style="width:40px;" src="@Url.Action("GetProfileImage", "User", new { userId = user.Id })" />
+                                    </td>
+                                    <td class="align-middle">@user.Name</td>
+                                    <td class="align-middle">@user.Email</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <h4>Receive messages</h4>
+                <div class="table-wrapper border">
+                    <table id="receiveMessageTable" class="table table-header-fixed">
+                        <thead>
+                            <tr>
+                                <th>Content</th>
+                                <th>Receive from</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(Model, page => Url.Action("UserManage", new { page }))
+</div>
+
+@section Scripts {
+    <script>
+        var userMessages = null;
+        function showConfirm(userId) {
+            document.getElementById('deleteUserId').value = userId;
+            $('#confirmDeleteModal').modal('show');
+        }
+        function showMessage(userId) {
+            fetch('/api/Message/GetMessagesOf?userId=' + userId)
+            .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    updateMessageTable(data, userId)
+                });
+            $('#messageModal').modal('show');
+        }
+
+        $('#successMessage').on('click', function (event) {
+            if ($(event.target).closest('.close').length) {
+                $(this).removeClass('d-flex');
+                $(this).addClass('d-none');
+            }
+        });
+        function updateMessageTable(messages, userId) {
+            // send message data
+            var sendTableBody = document.querySelector('#sendMessageTable tbody');
+            sendTableBody.innerHTML = '';
+
+            // Create new rows
+            messages.filter(m => m.senderId == userId).forEach(message => {
+                var row = document.createElement('tr');
+
+                var contentCell = document.createElement('td');
+                contentCell.innerHTML = message.content;
+                row.appendChild(contentCell);
+
+                var sendToCell = document.createElement('td');
+                sendToCell.textContent = message.receiverName;
+                row.appendChild(sendToCell);
+
+                var time = document.createElement('td');
+                time.textContent = message.timestamp;
+                row.appendChild(time);
+
+                sendTableBody.appendChild(row);
+            });
+
+            // receive message data
+            var sendTableBody = document.querySelector('#receiveMessageTable tbody');
+            sendTableBody.innerHTML = '';
+
+            // Create new rows
+            messages.filter(m => m.receiverId == userId).forEach(message => {
+                var row = document.createElement('tr');
+
+                var contentCell = document.createElement('td');
+                contentCell.innerHTML = message.content;
+                row.appendChild(contentCell);
+
+                var sendToCell = document.createElement('td');
+                sendToCell.textContent = message.senderName;
+                row.appendChild(sendToCell);
+
+                var time = document.createElement('td');
+                time.textContent = message.timestamp;
+                row.appendChild(time);
+
+                sendTableBody.appendChild(row);
+            });
+        }
+    </script>
+}

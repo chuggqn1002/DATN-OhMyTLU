@@ -1,0 +1,54 @@
+﻿@model OhMyTLU.Data.User
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h2>Create</h2>
+
+<form asp-action="CreateUser" method="post">
+    <div class="form-horizontal">
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            <label asp-for="Name" class="control-label col-md-2"></label>
+            <div class="col-md-10">
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email" class="control-label col-md-2"></label>
+            <div class="col-md-10">
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Password" class="control-label col-md-2"></label>
+            <div class="col-md-10">
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description" class="control-label col-md-2"></label>
+            <div class="col-md-10">
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+
+
+
+        <div class="form-group mt-2">
+            <div class="col-md-offset-2 col-md-10">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </div>
+</form>

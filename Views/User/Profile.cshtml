@@ -1,0 +1,87 @@
+﻿@model OhMyTLU.Models.UserProfileViewModel
+
+@{
+    ViewBag.Title = "Profile";
+}
+<h2 class="text-center mt-4">Profile</h2>
+
+<div class="container mt-5">
+    <form asp-action="Profile" method="post" enctype="multipart/form-data" class="border p-4 shadow-sm bg-white rounded">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group text-center">
+            <label asp-for="ImageFile" class="control-label w-100">Profile Image</label>
+            <div class="d-flex flex-column align-items-center">
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+                @if (Model.ImageData != null)
+                {
+                    <img id="imagePreview" src="@Url.Action("GetProfileImage", "User", new { userId = ViewBag.UserId })" alt="Profile Image" class="img-thumbnail mb-2" width="150" />
+                }
+                else
+                {
+                    <img id="imagePreview" src="#" alt="Profile Image" class="img-thumbnail mb-2" width="150" style="display: none;" />
+                }
+                <button id="btnChangeImage" class="btn btn-primary mt-2" type="button">Change Image</button>
+                <input hidden id="imageFile" asp-for="ImageFile" type="file" onchange="previewImage(event)" />
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label asp-for="Name" class="control-label col-md-2">Name</label>
+            <div class="col-md-10">
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label asp-for="Email" class="control-label col-md-2">Email</label>
+            <div class="col-md-10">
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label asp-for="Password" class="control-label col-md-2">Password</label>
+            <div class="col-md-10">
+                <input asp-for="Password" class="form-control" type="password" value="@Model.Password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label asp-for="Description" class="control-label col-md-2">Description</label>
+            <div class="col-md-10">
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group row mt-4">
+            <div class="col-md-10 offset-md-2">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var output = document.getElementById('imagePreview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        $(document).ready(function () {
+            $('#btnChangeImage').on('click', function () {
+                $('#imageFile').click();
+            });
+        });
+    </script>
+}
