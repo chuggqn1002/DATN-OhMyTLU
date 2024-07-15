@@ -1,0 +1,62 @@
+# Binaries for .NET
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.app
+*.pkg
+*.so
+*.dylib
+*.dSYM/
+
+# .NET Core-specific
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+
+# Include if you have Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Include if you have Bower dependencies
+bower_components/
+
+# DotNetTool artifacts
+**/.dotnet-tools
+
+# Visual Studio Mac
+.vscode/
+
+# Include for Visual Studio Code
+.history/
+
+# Dependency directories
+**/bin/
+**/obj/
